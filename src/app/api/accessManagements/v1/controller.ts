@@ -6,7 +6,7 @@
 |-----------------------------------------
 */
 
-import { FilterQuery } from 'mongoose';
+import {FilterQuery} from 'mongoose';
 
 import { withDB } from '@/app/api/utils/db';
 

@@ -14,6 +14,7 @@
     - name [package.json]
     - name [package.json]
     - name [/public/manifest.json]
+    - if it is not run then check node version [18.18.2]
 
 3. bun i [install all dependencies, and run build]
 

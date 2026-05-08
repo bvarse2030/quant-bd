@@ -47,7 +47,7 @@ const getCachedAllPages = cache(async (): Promise<NormalizedPage[]> => {
   try {
     const pagesData = (await getAllPages()) as unknown as PageApiResponse;
 
-    if (pagesData && Array.isArray(pagesData.data.pages)) {
+    if (pagesData && pagesData.data && Array.isArray(pagesData.data.pages)) {
       return getNormalizedPages(pagesData.data.pages.filter(i => i.isActive));
     }
     return [];
