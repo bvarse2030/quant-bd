@@ -12,7 +12,7 @@
     - favicon [/src/app/favicon.ico]
     - clear sw.js [/public/sw.js]
     - name [package.json]
-    - name [package.json]
+    - name, descriptions [/src/layout.tsx]
     - name [/public/manifest.json]
     - if it is not run then check node version [18.18.2]
 

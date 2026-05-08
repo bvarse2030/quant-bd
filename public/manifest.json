@@ -1,7 +1,7 @@
 {
-  "name": "App Generator",
-  "short_name": "App Generator",
-  "description": "Achieve your desired IELTS band score",
+  "name": "Quant BD",
+  "short_name": "Q BD",
+  "description": "Growing Finance with AI",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
