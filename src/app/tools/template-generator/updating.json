@@ -1,0 +1,36 @@
+{
+    "uid": "9b02473a-0e79-4326-80a3-584b9cc506f0",
+    "templateName": "Basic Template",
+    "schema": {
+        "start-date": "DATE",
+        "start-time": "TIME",
+        "schedule-date": "DATERANGE",
+        "schedule-time": "TIMERANGE",
+        "students": "STRINGARRAY#Name, Class, Roll",
+        "complexValue": {
+            "id": "STRING",
+            "title": "STRING",
+            "parent": {
+                "id": "STRING",
+                "title": "STRING",
+                "child": {
+                    "id": "STRING",
+                    "title": "STRING",
+                    "child": "STRING",
+                    "note": "STRING"
+                },
+                "note": "STRING"
+            },
+            "note": "STRING"
+        }
+    },
+    "namingConvention": {
+        "Users_1_000___": "Postsa",
+        "users_2_000___": "postsa",
+        "User_3_000___": "Posta",
+        "user_4_000___": "posta",
+        "ISelect_6_000___": "ISelect",
+        "select_5_000___": "select",
+        "use_generate_folder": false
+    }
+}

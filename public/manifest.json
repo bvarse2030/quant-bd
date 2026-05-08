@@ -1,0 +1,49 @@
+{
+  "name": "App Generator",
+  "short_name": "App Generator",
+  "description": "Achieve your desired IELTS band score",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-1280x720.png",
+      "sizes": "1280x720",
+      "form_factor": "wide",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-412x915.png",
+      "sizes": "412x915",
+      "type": "image/png"
+    }
+  ]
+}
