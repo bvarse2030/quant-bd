@@ -462,9 +462,9 @@ const Page = () => {
                     isToday ? 'border-lime-300/70 bg-lime-300/20 shadow-[0_0_22px_rgba(190,242,100,0.28)]' : 'border-emerald-300/10 bg-white/[0.03]'
                   }`}
                 >
-                  <p className={`text-[10px] font-black uppercase ${isToday ? 'text-lime-100' : 'text-emerald-100/45'}`}>{day.slice(0, 3)}</p>
+                  <p className={`text-[10px] md:text-[12px] font-black uppercase ${isToday ? 'text-lime-100' : 'text-emerald-100/45'}`}>{day.slice(0, 3)}</p>
                   <p className={`mx-auto mt-1 h-2 w-2 rounded-full ${isToday ? 'bg-lime-300' : 'bg-emerald-900'}`} />
-                  <p className="mt-1 text-[9px] text-emerald-100/35">{isToday ? 'Today' : 'Standby'}</p>
+                  <p className={`text-[6px] md:text-[8px] font-black uppercase ${isToday ? 'text-lime-100' : 'text-emerald-100/45'}`}>{day}</p>
                 </motion.div>
               );
             })}
