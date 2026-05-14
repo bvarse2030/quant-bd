@@ -13,7 +13,6 @@ import { ToastContainer } from 'react-toastify';
 import { ReduxProvider } from '@/redux/provider';
 
 import PWAPopup from '@/components/common/PWAPopUp';
-import FooterServer from '@/components/common/FooterServer';
 import MenuComponentWithSession from '@/components/common/MenuWithSession';
 
 import './globals.css';
@@ -38,7 +37,6 @@ export default async function RootLayout({
         <ReduxProvider>
           <MenuComponentWithSession />
           <main className=" animate-in fade-in duration-500">{children}</main>
-          <FooterServer />
           <PWAPopup />
         </ReduxProvider>
         <Toaster position="top-right" richColors closeButton theme="light" />
