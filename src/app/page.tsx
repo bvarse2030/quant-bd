@@ -8,28 +8,15 @@
 
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Activity,
-  CalendarClock,
-  ChevronLeft,
-  ChevronRight,
-  Clock3,
-  Eye,
-  Pencil,
-  Plus,
-  RadioTower,
-  ShieldCheck,
-  TimerReset,
-  TrendingDown,
-  TrendingUp,
-} from 'lucide-react';
+import { Activity, Clock3, Eye, Plus, RadioTower, ShieldCheck, TimerReset, TrendingDown, TrendingUp } from 'lucide-react';
 
 type TradeStatus = 'activeTrade' | 'waitingTrade';
+type ResultType = 'Profit' | 'Loss';
 
 interface Entry {
-  id: number;
+  _id: string;
   openDate: string;
   openTime: string;
   closeDate: string;
@@ -39,186 +26,28 @@ interface Entry {
   tp: number;
   sl: number;
   result: {
-    type: 'Profit' | 'Loss';
+    type: ResultType;
     amount: number;
   };
   isPlaced: boolean;
   trickNumber: string;
 }
 
-const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const entriesPerPage = 10;
+interface ApiResponse<T> {
+  data: T;
+  message: string;
+  status: number;
+}
 
-const seedEntries: Entry[] = [
-  {
-    id: 1,
-    openDate: '2026-05-04',
-    openTime: '12:08 PM',
-    closeDate: '2026-05-04',
-    closeTime: '03:26 PM',
-    volume: 0.12,
-    entry: 1.08342,
-    tp: 1.08792,
-    sl: 1.08162,
-    result: { type: 'Profit', amount: 54 },
-    isPlaced: true,
-    trickNumber: 'TRK-8101',
-  },
-  {
-    id: 2,
-    openDate: '2026-05-05',
-    openTime: '12:14 PM',
-    closeDate: '2026-05-05',
-    closeTime: '02:48 PM',
-    volume: 0.1,
-    entry: 1.08618,
-    tp: 1.08948,
-    sl: 1.08468,
-    result: { type: 'Loss', amount: 22 },
-    isPlaced: true,
-    trickNumber: 'TRK-8102',
-  },
-  {
-    id: 3,
-    openDate: '2026-05-06',
-    openTime: '12:22 PM',
-    closeDate: '2026-05-06',
-    closeTime: '04:10 PM',
-    volume: 0.15,
-    entry: 1.09106,
-    tp: 1.09556,
-    sl: 1.08886,
-    result: { type: 'Profit', amount: 67 },
-    isPlaced: true,
-    trickNumber: 'TRK-8103',
-  },
-  {
-    id: 4,
-    openDate: '2026-05-07',
-    openTime: '12:02 PM',
-    closeDate: '2026-05-07',
-    closeTime: '01:56 PM',
-    volume: 0.08,
-    entry: 1.09432,
-    tp: 1.09712,
-    sl: 1.09282,
-    result: { type: 'Profit', amount: 31 },
-    isPlaced: true,
-    trickNumber: 'TRK-8104',
-  },
-  {
-    id: 5,
-    openDate: '2026-05-08',
-    openTime: '12:40 PM',
-    closeDate: '2026-05-08',
-    closeTime: '05:12 PM',
-    volume: 0.2,
-    entry: 1.09928,
-    tp: 1.10358,
-    sl: 1.09738,
-    result: { type: 'Loss', amount: 38 },
-    isPlaced: true,
-    trickNumber: 'TRK-8105',
-  },
-  {
-    id: 6,
-    openDate: '2026-05-11',
-    openTime: '12:18 PM',
-    closeDate: '2026-05-11',
-    closeTime: '03:33 PM',
-    volume: 0.14,
-    entry: 1.10118,
-    tp: 1.10528,
-    sl: 1.09908,
-    result: { type: 'Profit', amount: 58 },
-    isPlaced: true,
-    trickNumber: 'TRK-8106',
-  },
-  {
-    id: 7,
-    openDate: '2026-05-12',
-    openTime: '12:11 PM',
-    closeDate: '2026-05-12',
-    closeTime: '02:21 PM',
-    volume: 0.1,
-    entry: 1.10478,
-    tp: 1.10818,
-    sl: 1.10298,
-    result: { type: 'Profit', amount: 44 },
-    isPlaced: true,
-    trickNumber: 'TRK-8107',
-  },
-  {
-    id: 8,
-    openDate: '2026-05-13',
-    openTime: '12:05 PM',
-    closeDate: '2026-05-13',
-    closeTime: '01:43 PM',
-    volume: 0.09,
-    entry: 1.10792,
-    tp: 1.11072,
-    sl: 1.10642,
-    result: { type: 'Loss', amount: 18 },
-    isPlaced: false,
-    trickNumber: 'TRK-8108',
-  },
-  {
-    id: 9,
-    openDate: '2026-05-14',
-    openTime: '12:24 PM',
-    closeDate: '2026-05-14',
-    closeTime: '04:02 PM',
-    volume: 0.16,
-    entry: 1.10964,
-    tp: 1.11394,
-    sl: 1.10764,
-    result: { type: 'Profit', amount: 69 },
-    isPlaced: true,
-    trickNumber: 'TRK-8109',
-  },
-  {
-    id: 10,
-    openDate: '2026-05-15',
-    openTime: '12:19 PM',
-    closeDate: '2026-05-15',
-    closeTime: '03:08 PM',
-    volume: 0.11,
-    entry: 1.11236,
-    tp: 1.11596,
-    sl: 1.11076,
-    result: { type: 'Profit', amount: 41 },
-    isPlaced: true,
-    trickNumber: 'TRK-8110',
-  },
-  {
-    id: 11,
-    openDate: '2026-05-18',
-    openTime: '12:07 PM',
-    closeDate: '2026-05-18',
-    closeTime: '02:50 PM',
-    volume: 0.13,
-    entry: 1.11618,
-    tp: 1.12018,
-    sl: 1.11418,
-    result: { type: 'Loss', amount: 29 },
-    isPlaced: false,
-    trickNumber: 'TRK-8111',
-  },
-  {
-    id: 12,
-    openDate: '2026-05-19',
-    openTime: '12:32 PM',
-    closeDate: '2026-05-19',
-    closeTime: '05:18 PM',
-    volume: 0.18,
-    entry: 1.11882,
-    tp: 1.12332,
-    sl: 1.11642,
-    result: { type: 'Profit', amount: 73 },
-    isPlaced: true,
-    trickNumber: 'TRK-8112',
-  },
-];
+interface EntriesPayload {
+  entries: Entry[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const homeEntriesLimit = 1000;
 
 const pad = (value: number) => String(value).padStart(2, '0');
 
@@ -271,9 +100,7 @@ const getNextOrderWindow = (date: Date) => {
     const candidate = new Date(next);
     candidate.setHours(12, 0, 0, 0);
 
-    if (dayIndex >= 0 && dayIndex <= 4 && candidate > date) {
-      return candidate;
-    }
+    if (dayIndex >= 0 && dayIndex <= 4 && candidate > date) return candidate;
 
     next.setDate(next.getDate() + 1);
     next.setHours(0, 0, 0, 0);
@@ -282,34 +109,31 @@ const getNextOrderWindow = (date: Date) => {
   return next;
 };
 
-const createEntry = (id: number): Entry => {
+const createEntryPayload = (total: number) => {
   const now = new Date();
   const close = new Date(now);
   close.setHours(close.getHours() + 3);
 
   return {
-    id,
     openDate: now.toISOString().slice(0, 10),
     openTime: new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).format(now),
     closeDate: close.toISOString().slice(0, 10),
     closeTime: new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).format(close),
-    volume: 0.1,
-    entry: 1.11428,
-    tp: 1.11868,
-    sl: 1.11218,
-    result: { type: 'Profit', amount: 0 },
+    volume: 0.01,
+    entry: 0,
+    tp: 0,
+    sl: 0,
+    result: { type: 'Profit' as ResultType, amount: 0 },
     isPlaced: true,
-    trickNumber: `TRK-${8100 + id}`,
+    trickNumber: `TRK-${Date.now()}-${total + 1}`,
   };
 };
 
-const SummaryBox = ({ entries, status }: { entries: Entry[]; status: TradeStatus }) => {
+const SummaryBox = ({ entries, total, status }: { entries: Entry[]; total: number; status: TradeStatus }) => {
   const placed = entries.filter(entry => entry.isPlaced).length;
   const wins = entries.filter(entry => entry.result.type === 'Profit').length;
   const losses = entries.filter(entry => entry.result.type === 'Loss').length;
-  const netResult = entries.reduce((total, entry) => {
-    return entry.result.type === 'Profit' ? total + entry.result.amount : total - entry.result.amount;
-  }, 0);
+  const netResult = entries.reduce((sum, entry) => (entry.result.type === 'Profit' ? sum + entry.result.amount : sum - entry.result.amount), 0);
 
   return (
     <motion.section
@@ -320,8 +144,8 @@ const SummaryBox = ({ entries, status }: { entries: Entry[]; status: TradeStatus
     >
       {[
         { label: 'Status', value: status, tone: status === 'activeTrade' ? 'text-lime-300' : 'text-cyan-300' },
-        { label: 'Placed', value: `${placed}/${entries.length}`, tone: 'text-emerald-200' },
-        { label: 'Win / Loss', value: `${wins} / ${losses}`, tone: 'text-teal-200' },
+        { label: 'Placed', value: `${placed}/${total}`, tone: 'text-emerald-200' },
+        { label: 'Profit / Loss', value: `${wins} / ${losses}`, tone: 'text-teal-200' },
         { label: 'Net Result', value: `${netResult >= 0 ? '+' : '-'}$${Math.abs(netResult)}`, tone: netResult >= 0 ? 'text-lime-300' : 'text-rose-300' },
       ].map(item => (
         <div key={item.label} className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-2">
@@ -335,8 +159,30 @@ const SummaryBox = ({ entries, status }: { entries: Entry[]; status: TradeStatus
 
 const Page = () => {
   const [now, setNow] = useState<Date | null>(null);
-  const [entries, setEntries] = useState<Entry[]>(seedEntries);
-  const [page, setPage] = useState(1);
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [totalEntries, setTotalEntries] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const fetchEntries = useCallback(async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      const response = await fetch(`/api/home/v1?page=1&limit=${homeEntriesLimit}`, { cache: 'no-store' });
+      const payload = (await response.json()) as ApiResponse<EntriesPayload>;
+      if (!response.ok) throw new Error(payload.message || 'Failed to load entries');
+
+      setEntries(payload.data.entries);
+      setTotalEntries(payload.data.total);
+    } catch (fetchError) {
+      setError(fetchError instanceof Error ? fetchError.message : 'Failed to load entries');
+      setEntries([]);
+      setTotalEntries(0);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     setNow(new Date());
@@ -344,118 +190,135 @@ const Page = () => {
     return () => window.clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    fetchEntries();
+  }, [fetchEntries]);
+
   const marketOpen = now ? isMarketOpen(now) : false;
   const status: TradeStatus = now && isOrderWindow(now) ? 'activeTrade' : 'waitingTrade';
   const todayIndex = now ? getMondayFirstIndex(now) : -1;
   const nextOrderWindow = now ? getNextOrderWindow(now) : null;
   const countdown = now && nextOrderWindow ? formatCountdown(nextOrderWindow.getTime() - now.getTime()) : '00h 00m 00s';
-  const totalPages = Math.ceil(entries.length / entriesPerPage);
 
-  const visibleEntries = useMemo(() => {
-    const start = (page - 1) * entriesPerPage;
-    return entries.slice(start, start + entriesPerPage);
-  }, [entries, page]);
+  const addEntry = async () => {
+    setIsSaving(true);
+    setError('');
+    try {
+      const response = await fetch('/api/home/v1', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(createEntryPayload(totalEntries)),
+      });
+      const payload = (await response.json()) as ApiResponse<Entry>;
+      if (!response.ok) throw new Error(payload.message || 'Failed to add entry');
 
-  const addEntry = () => {
-    setEntries(current => [createEntry(current.length + 1), ...current]);
-    setPage(1);
+      await fetchEntries();
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Failed to add entry');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const entryList = (
-    <section className="space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.28em] text-emerald-200/50">Execution Log</p>
-          <h2 className="text-xl font-black text-white">Entry List</h2>
-        </div>
-        <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2 py-1 text-xs font-semibold text-cyan-200">{entries.length} Entries</span>
-      </div>
+  const viewEntry = (entry: Entry) => {
+    window.alert(
+      [
+        `Trick: ${entry.trickNumber}`,
+        `Open: ${entry.openDate} ${entry.openTime}`,
+        `Close: ${entry.closeDate || '-'} ${entry.closeTime || '-'}`,
+        `Volume: ${entry.volume}`,
+        `Entry: ${entry.entry}`,
+        `TP: ${entry.tp}`,
+        `SL: ${entry.sl}`,
+        `Result: ${entry.result.type} $${entry.result.amount}`,
+        `Placed: ${entry.isPlaced ? 'Yes' : 'No'}`,
+      ].join('\n'),
+    );
+  };
 
-      <div className="grid gap-2">
-        {visibleEntries.map((entry, index) => (
-          <motion.article
-            key={entry.id}
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.035 }}
-            className="rounded-lg border border-emerald-300/15 bg-slate-950/70 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-xs font-bold text-emerald-200">{entry.trickNumber}</span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                      entry.isPlaced ? 'bg-lime-400/15 text-lime-200' : 'bg-slate-400/15 text-slate-300'
-                    }`}
+  const entryList = useMemo(
+    () => (
+      <section className="space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.28em] text-emerald-200/50">Execution Log</p>
+            <h2 className="text-xl font-black text-white">Entry List</h2>
+          </div>
+          <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2 py-1 text-xs font-semibold text-cyan-200">{totalEntries} Entries</span>
+        </div>
+
+        {error && <div className="rounded-md border border-rose-300/25 bg-rose-400/10 px-3 py-2 text-xs font-semibold text-rose-100">{error}</div>}
+
+        {isLoading ? (
+          <div className="rounded-lg border border-emerald-300/15 bg-black/35 p-6 text-center text-sm font-semibold text-emerald-100/60">
+            Loading entries...
+          </div>
+        ) : entries.length === 0 ? (
+          <div className="rounded-lg border border-emerald-300/15 bg-black/35 p-6 text-center text-sm font-semibold text-emerald-100/60">
+            No entries found. Add Entry will create the first record when the trade window is active.
+          </div>
+        ) : (
+          <div className="grid gap-2">
+            {entries.map((entry, index) => (
+              <motion.article
+                key={entry._id}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.035 }}
+                className="rounded-lg border border-emerald-300/15 bg-slate-950/70 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-xs font-bold text-emerald-200">{entry.trickNumber}</span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-bold ${entry.isPlaced ? 'bg-lime-400/15 text-lime-200' : 'bg-slate-400/15 text-slate-300'}`}
+                      >
+                        {entry.isPlaced ? 'Placed' : 'Not Placed'}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-emerald-100/50">
+                      Open {entry.openDate} at {entry.openTime}
+                    </p>
+                  </div>
+                  <div className={`text-right text-sm font-black ${entry.result.type === 'Profit' ? 'text-lime-300' : 'text-rose-300'}`}>
+                    {entry.result.type} ${entry.result.amount}
+                  </div>
+                </div>
+
+                <div className="mt-2 grid grid-cols-2 gap-1.5 text-xs sm:grid-cols-4 lg:grid-cols-8">
+                  {[
+                    ['Close Date', entry.closeDate || '-'],
+                    ['Close Time', entry.closeTime || '-'],
+                    ['Volume', entry.volume],
+                    ['Entry', entry.entry],
+                    ['TP', entry.tp],
+                    ['SL', entry.sl],
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-md border border-white/10 bg-white/[0.03] px-2 py-1.5">
+                      <p className="text-[9px] uppercase tracking-[0.16em] text-emerald-100/40">{label}</p>
+                      <p className="mt-0.5 font-semibold text-emerald-50">{value}</p>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => viewEntry(entry)}
+                    className="inline-flex min-h-12 items-center justify-center gap-1 rounded-md border border-cyan-300/25 bg-cyan-300/10 text-xs font-bold text-cyan-100 transition hover:bg-cyan-300/20"
                   >
-                    {entry.isPlaced ? 'Placed' : 'Not Placed'}
-                  </span>
+                    <Eye size={14} />
+                    View
+                  </button>
                 </div>
-                <p className="mt-1 text-xs text-emerald-100/50">
-                  Open {entry.openDate} at {entry.openTime}
-                </p>
-              </div>
-              <div className={`text-right text-sm font-black ${entry.result.type === 'Profit' ? 'text-lime-300' : 'text-rose-300'}`}>
-                {entry.result.type} ${entry.result.amount}
-              </div>
-            </div>
-
-            <div className="mt-2 grid grid-cols-2 gap-1.5 text-xs sm:grid-cols-4 lg:grid-cols-8">
-              {[
-                ['Close Date', entry.closeDate],
-                ['Close Time', entry.closeTime],
-                ['Volume', entry.volume],
-                ['Entry', entry.entry],
-                ['TP', entry.tp],
-                ['SL', entry.sl],
-              ].map(([label, value]) => (
-                <div key={label} className="rounded-md border border-white/10 bg-white/[0.03] px-2 py-1.5">
-                  <p className="text-[9px] uppercase tracking-[0.16em] text-emerald-100/40">{label}</p>
-                  <p className="mt-0.5 font-semibold text-emerald-50">{value}</p>
-                </div>
-              ))}
-              <button className="inline-flex min-h-12 items-center justify-center gap-1 rounded-md border border-cyan-300/25 bg-cyan-300/10 text-xs font-bold text-cyan-100 transition hover:bg-cyan-300/20">
-                <Eye size={14} />
-                View
-              </button>
-              <button className="inline-flex min-h-12 items-center justify-center gap-1 rounded-md border border-lime-300/25 bg-lime-300/10 text-xs font-bold text-lime-100 transition hover:bg-lime-300/20">
-                <Pencil size={14} />
-                Edit
-              </button>
-            </div>
-          </motion.article>
-        ))}
-      </div>
-
-      {entries.length > entriesPerPage && (
-        <div className="flex items-center justify-between rounded-lg border border-emerald-300/15 bg-black/35 p-2">
-          <button
-            onClick={() => setPage(current => Math.max(1, current - 1))}
-            disabled={page === 1}
-            className="inline-flex h-9 items-center gap-1 rounded-md border border-white/10 px-2 text-xs font-bold text-emerald-100 disabled:cursor-not-allowed disabled:opacity-35"
-          >
-            <ChevronLeft size={15} />
-            Prev
-          </button>
-          <span className="text-xs font-semibold text-emerald-100/60">
-            Page {page} of {totalPages}
-          </span>
-          <button
-            onClick={() => setPage(current => Math.min(totalPages, current + 1))}
-            disabled={page === totalPages}
-            className="inline-flex h-9 items-center gap-1 rounded-md border border-white/10 px-2 text-xs font-bold text-emerald-100 disabled:cursor-not-allowed disabled:opacity-35"
-          >
-            Next
-            <ChevronRight size={15} />
-          </button>
-        </div>
-      )}
-    </section>
+              </motion.article>
+            ))}
+          </div>
+        )}
+      </section>
+    ),
+    [entries, error, isLoading, totalEntries],
   );
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#04130d] text-white pt-20">
+    <main className="min-h-screen overflow-hidden bg-[#04130d] pt-20 text-white">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(34,197,94,0.24),transparent_28%),radial-gradient(circle_at_85%_18%,rgba(45,212,191,0.16),transparent_24%),linear-gradient(135deg,rgba(3,7,18,0.1),rgba(6,95,70,0.2))]" />
       <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-3 px-2 py-3 sm:px-4 md:py-5">
         <motion.section
@@ -507,7 +370,7 @@ const Page = () => {
                   }`}
                 >
                   <p className={`text-[10px] font-black uppercase ${isToday ? 'text-lime-100' : 'text-emerald-100/45'}`}>{day.slice(0, 3)}</p>
-                  <p className={`mt-1 h-2 w-2 rounded-full mx-auto ${isToday ? 'bg-lime-300' : 'bg-emerald-900'}`} />
+                  <p className={`mx-auto mt-1 h-2 w-2 rounded-full ${isToday ? 'bg-lime-300' : 'bg-emerald-900'}`} />
                   <p className="mt-1 text-[9px] text-emerald-100/35">{isToday ? 'Today' : 'Standby'}</p>
                 </motion.div>
               );
@@ -535,10 +398,11 @@ const Page = () => {
               </div>
               <button
                 onClick={addEntry}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-lime-300 px-4 text-sm font-black text-emerald-950 shadow-[0_0_30px_rgba(190,242,100,0.35)] transition hover:bg-lime-200"
+                disabled={isSaving}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-lime-300 px-4 text-sm font-black text-emerald-950 shadow-[0_0_30px_rgba(190,242,100,0.35)] transition hover:bg-lime-200 disabled:opacity-60"
               >
                 <Plus size={17} />
-                Add Entry
+                {isSaving ? 'Adding...' : 'Add Entry'}
               </button>
             </div>
           ) : (
@@ -559,16 +423,11 @@ const Page = () => {
           )}
         </motion.section>
 
-        {status === 'waitingTrade' && <SummaryBox entries={entries} status={status} />}
+        {status === 'waitingTrade' && <SummaryBox entries={entries} total={totalEntries} status={status} />}
 
         {entryList}
 
-        {status === 'activeTrade' && <SummaryBox entries={entries} status={status} />}
-
-        <div className="pointer-events-none absolute bottom-8 right-4 hidden items-center gap-2 rounded-full border border-emerald-300/10 bg-emerald-300/5 px-3 py-2 text-xs text-emerald-100/45 sm:flex">
-          <CalendarClock size={14} />
-          Monday first, live active-day signal
-        </div>
+        {status === 'activeTrade' && <SummaryBox entries={entries} total={totalEntries} status={status} />}
       </div>
       <TrendingUp className="pointer-events-none absolute left-3 top-40 h-16 w-16 animate-pulse text-emerald-300/10" />
       <TrendingDown className="pointer-events-none absolute bottom-20 right-5 h-20 w-20 animate-pulse text-cyan-300/10" />
