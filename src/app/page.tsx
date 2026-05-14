@@ -10,7 +10,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Activity, Clock3, Eye, Plus, RadioTower, ShieldCheck, TimerReset, TrendingDown, TrendingUp } from 'lucide-react';
+import { Activity, ChevronLeft, ChevronRight, Clock3, Eye, Plus, RadioTower, ShieldCheck, TimerReset, TrendingDown, TrendingUp } from 'lucide-react';
 
 type TradeStatus = 'activeTrade' | 'waitingTrade';
 type ResultType = 'Profit' | 'Loss';
@@ -48,6 +48,7 @@ interface EntriesPayload {
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const homeEntriesLimit = 1000;
+const entriesPerPage = 10;
 
 const pad = (value: number) => String(value).padStart(2, '0');
 
@@ -161,6 +162,7 @@ const Page = () => {
   const [now, setNow] = useState<Date | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [totalEntries, setTotalEntries] = useState(0);
+  const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
@@ -184,6 +186,24 @@ const Page = () => {
     }
   }, []);
 
+  const totalPages = Math.max(1, Math.ceil(entries.length / entriesPerPage));
+  const visibleEntries = useMemo(() => {
+    const start = (page - 1) * entriesPerPage;
+    return entries.slice(start, start + entriesPerPage);
+  }, [entries, page]);
+
+  const analytics = useMemo(() => {
+    const placed = entries.filter(entry => entry.isPlaced).length;
+    const profit = entries.filter(entry => entry.result.type === 'Profit').length;
+    const loss = entries.filter(entry => entry.result.type === 'Loss').length;
+    const net = entries.reduce((total, entry) => (entry.result.type === 'Profit' ? total + entry.result.amount : total - entry.result.amount), 0);
+    const placedRate = entries.length ? Math.round((placed / entries.length) * 100) : 0;
+    const profitRate = entries.length ? Math.round((profit / entries.length) * 100) : 0;
+    const totalVolume = entries.reduce((total, entry) => total + entry.volume, 0);
+
+    return { placed, profit, loss, net, placedRate, profitRate, totalVolume };
+  }, [entries]);
+
   useEffect(() => {
     setNow(new Date());
     const timer = window.setInterval(() => setNow(new Date()), 1000);
@@ -193,6 +213,10 @@ const Page = () => {
   useEffect(() => {
     fetchEntries();
   }, [fetchEntries]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const marketOpen = now ? isMarketOpen(now) : false;
   const status: TradeStatus = now && isOrderWindow(now) ? 'activeTrade' : 'waitingTrade';
@@ -254,12 +278,10 @@ const Page = () => {
             Loading entries...
           </div>
         ) : entries.length === 0 ? (
-          <div className="rounded-lg border border-emerald-300/15 bg-black/35 p-6 text-center text-sm font-semibold text-emerald-100/60">
-            No entries found. Add Entry will create the first record when the trade window is active.
-          </div>
+          <div className="rounded-lg border border-emerald-300/15 bg-black/35 p-6 text-center text-sm font-semibold text-emerald-100/60">No entries found.</div>
         ) : (
           <div className="grid gap-2">
-            {entries.map((entry, index) => (
+            {visibleEntries.map((entry, index) => (
               <motion.article
                 key={entry._id}
                 initial={{ opacity: 0, y: 14 }}
@@ -312,15 +334,86 @@ const Page = () => {
             ))}
           </div>
         )}
+
+        {entries.length > entriesPerPage && (
+          <div className="flex items-center justify-between rounded-lg border border-emerald-300/15 bg-black/35 p-2">
+            <button
+              onClick={() => setPage(current => Math.max(1, current - 1))}
+              disabled={page === 1}
+              className="inline-flex h-9 items-center gap-1 rounded-md border border-white/10 px-2 text-xs font-bold text-emerald-100 disabled:cursor-not-allowed disabled:opacity-35"
+            >
+              <ChevronLeft size={15} />
+              Prev
+            </button>
+            <span className="text-xs font-semibold text-emerald-100/60">
+              Page {page} of {totalPages}
+            </span>
+            <button
+              onClick={() => setPage(current => Math.min(totalPages, current + 1))}
+              disabled={page === totalPages}
+              className="inline-flex h-9 items-center gap-1 rounded-md border border-white/10 px-2 text-xs font-bold text-emerald-100 disabled:cursor-not-allowed disabled:opacity-35"
+            >
+              Next
+              <ChevronRight size={15} />
+            </button>
+          </div>
+        )}
       </section>
     ),
-    [entries, error, isLoading, totalEntries],
+    [entries.length, error, isLoading, page, totalEntries, totalPages, visibleEntries],
   );
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#04130d] pt-20 text-white">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(34,197,94,0.24),transparent_28%),radial-gradient(circle_at_85%_18%,rgba(45,212,191,0.16),transparent_24%),linear-gradient(135deg,rgba(3,7,18,0.1),rgba(6,95,70,0.2))]" />
       <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-3 px-2 py-3 sm:px-4 md:py-5">
+        <motion.section
+          layout
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`rounded-lg border p-3 backdrop-blur ${
+            status === 'activeTrade'
+              ? 'border-lime-300/30 bg-lime-300/10 shadow-[0_0_45px_rgba(132,204,22,0.18)]'
+              : 'border-cyan-300/25 bg-cyan-300/10 shadow-[0_0_45px_rgba(34,211,238,0.14)]'
+          }`}
+        >
+          {status === 'activeTrade' ? (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="flex items-center gap-1 text-[10px] uppercase tracking-[0.25em] text-lime-100/55">
+                  <ShieldCheck size={13} />
+                  Place Order
+                </p>
+                <h2 className="mt-1 text-2xl font-black text-lime-100">Active trade window</h2>
+                <p className="text-xs text-lime-100/55">Order time is live from 12:00 PM to 1:00 PM.</p>
+              </div>
+              <button
+                onClick={addEntry}
+                disabled={isSaving}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-lime-300 px-4 text-sm font-black text-emerald-950 shadow-[0_0_30px_rgba(190,242,100,0.35)] transition hover:bg-lime-200 disabled:opacity-60"
+              >
+                <Plus size={17} />
+                {isSaving ? 'Adding...' : 'Add Entry'}
+              </button>
+            </div>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+              <div>
+                <p className="flex items-center gap-1 text-[10px] uppercase tracking-[0.25em] text-cyan-100/55">
+                  <TimerReset size={13} />
+                  Next order window countdown
+                </p>
+                <h2 className="mt-1 text-2xl font-black text-cyan-100">Please Wait</h2>
+                <p className="text-xs text-cyan-100/55">Add Entry unlocks only between 12:00 PM and 1:00 PM while market is open.</p>
+              </div>
+              <div className="rounded-md border border-cyan-300/30 bg-black/35 px-3 py-2 text-center">
+                <p className="text-[10px] uppercase tracking-[0.24em] text-cyan-100/45">Countdown</p>
+                <p className="font-mono text-2xl font-black text-cyan-100">{countdown}</p>
+              </div>
+            </div>
+          )}
+        </motion.section>
+
         <motion.section
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
@@ -378,56 +471,54 @@ const Page = () => {
           </div>
         </motion.section>
 
-        <motion.section
-          layout
-          className={`rounded-lg border p-3 backdrop-blur ${
-            status === 'activeTrade'
-              ? 'border-lime-300/30 bg-lime-300/10 shadow-[0_0_45px_rgba(132,204,22,0.18)]'
-              : 'border-cyan-300/25 bg-cyan-300/10 shadow-[0_0_45px_rgba(34,211,238,0.14)]'
-          }`}
-        >
-          {status === 'activeTrade' ? (
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="flex items-center gap-1 text-[10px] uppercase tracking-[0.25em] text-lime-100/55">
-                  <ShieldCheck size={13} />
-                  Place Order
-                </p>
-                <h2 className="mt-1 text-2xl font-black text-lime-100">Active trade window</h2>
-                <p className="text-xs text-lime-100/55">Order time is live from 12:00 PM to 1:00 PM.</p>
-              </div>
-              <button
-                onClick={addEntry}
-                disabled={isSaving}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-lime-300 px-4 text-sm font-black text-emerald-950 shadow-[0_0_30px_rgba(190,242,100,0.35)] transition hover:bg-lime-200 disabled:opacity-60"
-              >
-                <Plus size={17} />
-                {isSaving ? 'Adding...' : 'Add Entry'}
-              </button>
-            </div>
-          ) : (
-            <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
-              <div>
-                <p className="flex items-center gap-1 text-[10px] uppercase tracking-[0.25em] text-cyan-100/55">
-                  <TimerReset size={13} />
-                  Please Wait
-                </p>
-                <h2 className="mt-1 text-2xl font-black text-cyan-100">Next order window countdown</h2>
-                <p className="text-xs text-cyan-100/55">Add Entry unlocks only between 12:00 PM and 1:00 PM while market is open.</p>
-              </div>
-              <div className="rounded-md border border-cyan-300/30 bg-black/35 px-3 py-2 text-center">
-                <p className="text-[10px] uppercase tracking-[0.24em] text-cyan-100/45">Countdown</p>
-                <p className="font-mono text-2xl font-black text-cyan-100">{countdown}</p>
-              </div>
-            </div>
-          )}
-        </motion.section>
+        <SummaryBox entries={entries} total={totalEntries} status={status} />
 
-        {status === 'waitingTrade' && <SummaryBox entries={entries} total={totalEntries} status={status} />}
+        <section className="rounded-lg border border-emerald-300/15 bg-black/35 p-3 backdrop-blur">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.28em] text-cyan-200/50">Analytics</p>
+              <h2 className="text-xl font-black text-white">Performance Overview</h2>
+            </div>
+            <span className={analytics.net >= 0 ? 'text-sm font-black text-lime-300' : 'text-sm font-black text-rose-300'}>
+              {analytics.net >= 0 ? '+' : '-'}${Math.abs(analytics.net)}
+            </span>
+          </div>
+
+          <div className="grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="space-y-3">
+              {[
+                { label: 'Placed Rate', value: analytics.placedRate, tone: 'from-emerald-400 to-lime-300' },
+                { label: 'Profit Rate', value: analytics.profitRate, tone: 'from-cyan-400 to-emerald-300' },
+              ].map(item => (
+                <div key={item.label}>
+                  <div className="mb-1 flex items-center justify-between text-xs">
+                    <span className="font-bold uppercase tracking-[0.18em] text-white/45">{item.label}</span>
+                    <span className="font-black text-white">{item.value}%</span>
+                  </div>
+                  <div className="h-3 overflow-hidden rounded-full bg-black/35">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${item.value}%` }} className={`h-full rounded-full bg-gradient-to-r ${item.tone}`} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {[
+                ['Total Entries', totalEntries],
+                ['Placed', analytics.placed],
+                ['Profit / Loss', `${analytics.profit} / ${analytics.loss}`],
+                ['Total Volume', analytics.totalVolume.toFixed(2)],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-md border border-white/10 bg-white/[0.03] px-2 py-2">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">{label}</p>
+                  <p className="mt-1 font-black text-emerald-50">{value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
         {entryList}
-
-        {status === 'activeTrade' && <SummaryBox entries={entries} total={totalEntries} status={status} />}
       </div>
       <TrendingUp className="pointer-events-none absolute left-3 top-40 h-16 w-16 animate-pulse text-emerald-300/10" />
       <TrendingDown className="pointer-events-none absolute bottom-20 right-5 h-20 w-20 animate-pulse text-cyan-300/10" />
